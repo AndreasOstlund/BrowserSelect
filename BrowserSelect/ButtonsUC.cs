@@ -14,8 +14,9 @@ namespace BrowserSelect
         public ButtonsUC()
         {
             InitializeComponent();
-            add_button("About", show_about, 0);
-            add_button("Settings", show_setting, 1);
+            add_button("About", show_about, 65, 0);
+            add_button("Settings", show_setting, 65, 1);
+            add_button("C", show_copyurl, 20, 2);
 
             // http://www.telerik.com/blogs/winforms-scaling-at-large-dpi-settings-is-it-even-possible-
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -32,17 +33,30 @@ namespace BrowserSelect
             new frm_About().ShowDialog();
         }
 
-        private List<VButton> vbtn = new List<VButton>();
-        private void add_button(string text, EventHandler evt, int index)
+        private void show_copyurl(object sender, EventArgs e)
         {
+            Clipboard.SetText(Program.url);
+        }
+
+        private List<VButton> vbtn = new List<VButton>();
+        private void add_button(string text, EventHandler evt, int height, int index)
+        {
+            // calculate the top coordinate for this button by looking at the height of the buttons in vbtn list.
+            int btnTop = 0;
+            foreach(var btn2 in vbtn )
+            {
+                btnTop += btn2.Height + 5;
+            }
+            
             // code for vertical buttons on the right, they are custom controls
             // without support for form designer, so we initiate them in code
             var btn = new VButton();
             btn.Text = text;
             btn.Anchor = AnchorStyles.Right;
             btn.Width = 20;
-            btn.Height = 75;
-            btn.Top = index * 80;
+            btn.Height = height;
+            btn.Top = btnTop;
+
             //btn.Left = this.Width - 35;
             //btn.Left = btn_help.Right - btn.Width;
             btn.Left = 5;
