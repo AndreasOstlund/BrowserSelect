@@ -29,7 +29,7 @@ namespace BrowserSelect
 
                 //disable the set default if already default
                 if (default_browser != null && (string)default_browser == "bselectURL")
-                    btn_setdefault.Enabled = false;
+                    btn_setdefault.Enabled = true; // false;
             }
 
             //populate list of browsers for Rule List ComboBox
@@ -54,9 +54,78 @@ namespace BrowserSelect
             chk_check_update.Checked = Settings.Default.check_update != "nope";
         }
 
+        private void add_to_browser_list()
+        {
+            String exepath = Application.ExecutablePath;
+            String exedir = System.IO.Path.GetDirectoryName(exepath);
+            String exename = System.IO.Path.GetFileName(exepath);
+
+            using (RegistryKey key = Registry.CurrentUser.CreateSubKey(
+                    @"Software\BrowserSelect"))
+            {
+                key.SetValue("", exepath);
+            }
+
+            using (RegistryKey key = Registry.CurrentUser.CreateSubKey(
+                    @"Software\Clients\StartMenuInternet\" + exename))
+            {
+                key.SetValue("", "Browser Select");
+                using (RegistryKey ckey = key.CreateSubKey(@"Capabilities"))
+                {
+                    ckey.SetValue("ApplicationName", "BrowserSelect");
+                    ckey.SetValue("ApplicationDescription", "Choose a browser dynamically");
+                    ckey.SetValue("ApplicationIcon", String.Format("{0},0", exepath));
+
+                    using (RegistryKey skey = ckey.CreateSubKey(@"StartMenu"))
+                    {
+                        skey.SetValue("StartMenuInternet", exename);
+                    }
+                    using (RegistryKey skey = ckey.CreateSubKey(@"URLAssociations"))
+                    {
+                        string[] protocols = { "http", "https" };
+
+                        foreach (string protocol in protocols)
+                        {
+                            skey.SetValue(protocol, "bselectURL");
+                        }
+                    }
+                }
+                using (RegistryKey ckey = key.CreateSubKey(@"DefaultIcon"))
+                {
+                    ckey.SetValue("", String.Format("{0},0", exepath));
+                }
+                using (RegistryKey ckey = key.CreateSubKey(@"shell\open\command"))
+                {
+                    ckey.SetValue("", '"' + exepath + '"');
+                }
+            }
+
+            using (RegistryKey key = Registry.CurrentUser.CreateSubKey(
+                    @"Software\RegisteredApplications"))
+            {
+                key.SetValue("BrowserSelect", String.Format(@"Software\Clients\StartMenuInternet\{0}\Capabilities", exename));
+            }
+
+            using (RegistryKey key = Registry.CurrentUser.CreateSubKey(
+                    @"Software\Classes\bselectURL"))
+            {
+                key.SetValue("", "BrowserSelect Url");
+                using (RegistryKey ukey = key.CreateSubKey(@"shell\open\command"))
+                {
+                    ukey.SetValue("", String.Format("\"{0}\" \"%1\"", exepath));
+                }
+            }
+
+            //MessageBox.Show("BrowserSelect registered. Go into settings / Default apps to set to default browser.");
+        }
+
         private void btn_setdefault_Click(object sender, EventArgs e)
         {
             //set browser select as default in registry
+
+            // make sure it's added to os browser list. If "Installed" only with the .exe and platform is
+            // windows 10 this seems to be neccessary.
+            add_to_browser_list();
 
             //http
             using (RegistryKey key = Registry.CurrentUser.CreateSubKey(
@@ -70,7 +139,6 @@ namespace BrowserSelect
             {
                 key.SetValue("ProgId", "bselectURL");
             }
-
             btn_setdefault.Enabled = false;
         }
 
