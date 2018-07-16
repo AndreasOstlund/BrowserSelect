@@ -29,7 +29,7 @@ namespace BrowserSelect
 
                 //disable the set default if already default
                 if (default_browser != null && (string)default_browser == "bselectURL")
-                    btn_setdefault.Enabled = true; // false;
+                    btn_setdefault.Enabled = false;
             }
 
             //populate list of browsers for Rule List ComboBox
